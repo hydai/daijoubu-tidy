@@ -1,6 +1,7 @@
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy import String, func, select
+from sqlalchemy import String, and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models import DeclutterTask
@@ -117,3 +118,57 @@ class DeclutterTaskService:
             "dismissed": stats.get("dismissed", 0),
             "total": sum(stats.values()),
         }
+
+    async def get_recent_completed(self, days: int = 7) -> int:
+        """Get count of tasks completed in recent days."""
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        result = await self.db.execute(
+            select(func.count(DeclutterTask.id)).where(
+                and_(
+                    DeclutterTask.status == "done",
+                    DeclutterTask.updated_at >= since,
+                )
+            )
+        )
+        return result.scalar() or 0
+
+    async def get_recent_created(self, days: int = 7) -> int:
+        """Get count of tasks created in recent days."""
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        result = await self.db.execute(
+            select(func.count(DeclutterTask.id)).where(
+                DeclutterTask.created_at >= since
+            )
+        )
+        return result.scalar() or 0
+
+    async def get_completed_tasks(
+        self, since: datetime | None = None, limit: int = 100
+    ) -> list[DeclutterTask]:
+        """Get completed tasks, optionally filtered by date."""
+        query = (
+            select(DeclutterTask)
+            .where(DeclutterTask.status == "done")
+            .order_by(DeclutterTask.updated_at.desc())
+            .limit(limit)
+        )
+
+        if since:
+            query = query.where(DeclutterTask.updated_at >= since)
+
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
+    async def get_decision_stats(
+        self, since: datetime | None = None
+    ) -> dict[str, int]:
+        """Get statistics by decision type for completed tasks."""
+        query = select(
+            DeclutterTask.decision, func.count(DeclutterTask.id)
+        ).where(DeclutterTask.status == "done").group_by(DeclutterTask.decision)
+
+        if since:
+            query = query.where(DeclutterTask.updated_at >= since)
+
+        result = await self.db.execute(query)
+        return {row[0]: row[1] for row in result.all()}

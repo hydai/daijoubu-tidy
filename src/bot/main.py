@@ -22,7 +22,7 @@ class DaijoubuBot(commands.Bot):
         super().__init__(
             command_prefix="!",
             intents=intents,
-            description="AI-powered personal information organizer",
+            description="AI 斷捨離助手 - 幫助你整理生活中的物品",
         )
 
     async def setup_hook(self) -> None:
@@ -31,10 +31,8 @@ class DaijoubuBot(commands.Bot):
         await init_db()
 
         # Load cogs
-        await self.load_extension("src.bot.cogs.collect")
-        await self.load_extension("src.bot.cogs.search")
-        await self.load_extension("src.bot.cogs.summary")
         await self.load_extension("src.bot.cogs.declutter")
+        await self.load_extension("src.bot.cogs.summary")
 
         # Sync slash commands
         if settings.discord_guild_id:

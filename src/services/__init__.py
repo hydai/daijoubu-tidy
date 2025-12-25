@@ -1,5 +1,4 @@
 from .ai import AIService
-from .items import ItemService
-from .search import SearchService
+from .declutter import DeclutterTaskService
 
-__all__ = ["AIService", "ItemService", "SearchService"]
+__all__ = ["AIService", "DeclutterTaskService"]
