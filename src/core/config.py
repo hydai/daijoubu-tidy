@@ -26,8 +26,9 @@ class Settings(BaseSettings):
 
     # AI Model settings
     embedding_model: str = "text-embedding-3-small"
-    classification_model: str = "gpt-3.5-turbo"
-    summary_model: str = "gpt-4o-mini"
+    classification_model: str = "gpt-4.1-nano"
+    summary_model: str = "gpt-4.1-mini"
+    vision_model: str = "gpt-4.1-mini"
 
     @property
     def is_development(self) -> bool:

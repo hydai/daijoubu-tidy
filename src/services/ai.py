@@ -138,7 +138,7 @@ Keep the summary under 300 words.""",
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o",
+                model=settings.vision_model,
                 messages=[
                     {
                         "role": "system",
