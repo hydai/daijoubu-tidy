@@ -15,7 +15,9 @@ class Settings(BaseSettings):
     app_env: Literal["development", "production"] = "development"
 
     # Database
-    database_url: str = "postgresql+asyncpg://daijoubu:dev_password@localhost:5432/daijoubu"
+    database_url: str = (
+        "postgresql+asyncpg://daijoubu:dev_password@localhost:5432/daijoubu"
+    )
 
     # Discord
     discord_bot_token: str = ""
@@ -25,9 +27,6 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
 
     # AI Model settings
-    embedding_model: str = "text-embedding-3-small"
-    classification_model: str = "gpt-4.1-nano"
-    summary_model: str = "gpt-4.1-mini"
     vision_model: str = "gpt-4.1-mini"
 
     @property

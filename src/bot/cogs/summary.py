@@ -1,7 +1,7 @@
 import io
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import discord
 from discord import app_commands
@@ -67,10 +67,7 @@ class SummaryCog(commands.Cog):
         # 近期活動
         embed.add_field(
             name="📅 近 7 天",
-            value=(
-                f"新增：**{recent_created}** 個\n"
-                f"完成：**{recent_done}** 個"
-            ),
+            value=(f"新增：**{recent_created}** 個\n完成：**{recent_done}** 個"),
             inline=True,
         )
 
@@ -110,7 +107,7 @@ class SummaryCog(commands.Cog):
         await interaction.response.defer()
 
         # 計算時間範圍
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if period == "weekly":
             start_date = now - timedelta(weeks=1)
             period_name = "本週"
@@ -162,7 +159,7 @@ class SummaryCog(commands.Cog):
         )
 
         # 鼓勵訊息
-        discard_count = stats.get('discard', 0)
+        discard_count = stats.get("discard", 0)
         if discard_count >= 10:
             footer = "🎊 太厲害了！你成功清理了很多物品！"
         elif discard_count >= 5:
@@ -214,18 +211,21 @@ class SummaryCog(commands.Cog):
             filename = "declutter_export.json"
         else:
             import csv
+
             output = io.StringIO()
             writer = csv.writer(output)
             writer.writerow(["編號", "物品", "建議", "狀態", "處理記錄", "建立時間"])
             for task in tasks:
-                writer.writerow([
-                    str(task.id)[:8],
-                    task.item_name,
-                    task.decision,
-                    task.status,
-                    task.action_taken or "",
-                    task.created_at.strftime("%Y-%m-%d %H:%M"),
-                ])
+                writer.writerow(
+                    [
+                        str(task.id)[:8],
+                        task.item_name,
+                        task.decision,
+                        task.status,
+                        task.action_taken or "",
+                        task.created_at.strftime("%Y-%m-%d %H:%M"),
+                    ]
+                )
             file_data = io.BytesIO(output.getvalue().encode("utf-8"))
             filename = "declutter_export.csv"
 

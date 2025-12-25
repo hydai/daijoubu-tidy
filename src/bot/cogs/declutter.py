@@ -60,13 +60,6 @@ class DeclutterCog(commands.Cog):
             )
             return
 
-        # 決定顏色對應
-        color_map = {
-            "keep": discord.Color.green(),
-            "consider": discord.Color.gold(),
-            "discard": discord.Color.red(),
-        }
-
         decision_emoji = {
             "keep": "🟢 保留",
             "consider": "🟡 考慮",
@@ -93,13 +86,17 @@ class DeclutterCog(commands.Cog):
                     analysis=analysis,
                     decision=decision,
                     image_url=image.url,
-                    source_channel=interaction.channel.name if interaction.channel else None,
+                    source_channel=interaction.channel.name
+                    if interaction.channel
+                    else None,
                     source_message_id=str(interaction.id),
                 )
-                created_tasks.append({
-                    "task": task,
-                    "item": item,
-                })
+                created_tasks.append(
+                    {
+                        "task": task,
+                        "item": item,
+                    }
+                )
 
         # 建立回應 Embed
         embed = discord.Embed(
@@ -186,7 +183,9 @@ class DeclutterCog(commands.Cog):
             number_icon = NUMBER_EMOJIS[i]
 
             # 截取簡短分析
-            short_analysis = task.analysis[:80] + "..." if len(task.analysis) > 80 else task.analysis
+            short_analysis = (
+                task.analysis[:80] + "..." if len(task.analysis) > 80 else task.analysis
+            )
 
             embed.add_field(
                 name=f"{number_icon} {status_icon} {decision_icon} {task.item_name}",
@@ -211,7 +210,9 @@ class DeclutterCog(commands.Cog):
                 break
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_add(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
         """處理表情符號添加事件"""
         # 忽略 Bot 自己的反應
         if payload.user_id == self.bot.user.id:
@@ -220,7 +221,9 @@ class DeclutterCog(commands.Cog):
         await self._handle_reaction(payload, is_adding=True)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_remove(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
         """處理表情符號移除事件"""
         # 忽略 Bot 自己的反應
         if payload.user_id == self.bot.user.id:
@@ -260,13 +263,8 @@ class DeclutterCog(commands.Cog):
 
             if task:
                 # 根據是添加還是移除反應來切換狀態
-                if is_adding:
-                    # 添加反應 = 標記為完成
-                    new_status = "done"
-                else:
-                    # 移除反應 = 標記為待處理
-                    new_status = "pending"
-
+                # 添加反應 = 標記為完成，移除反應 = 標記為待處理
+                new_status = "done" if is_adding else "pending"
                 task.status = new_status
                 item_name = task.item_name
 
@@ -395,8 +393,8 @@ class DeclutterCog(commands.Cog):
             return
 
         await interaction.response.send_message(
-            f"✅ 已將 **{task.item_name}** 標記為完成！" +
-            (f"\n📝 記錄：{note}" if note else ""),
+            f"✅ 已將 **{task.item_name}** 標記為完成！"
+            + (f"\n📝 記錄：{note}" if note else ""),
         )
 
     @app_commands.command(name="task-dismiss", description="略過/忽略任務")
@@ -427,8 +425,8 @@ class DeclutterCog(commands.Cog):
             return
 
         await interaction.response.send_message(
-            f"⏭️ 已略過 **{task.item_name}**" +
-            (f"\n📝 原因：{reason}" if reason else ""),
+            f"⏭️ 已略過 **{task.item_name}**"
+            + (f"\n📝 原因：{reason}" if reason else ""),
         )
 
     @app_commands.command(name="task-delete", description="刪除任務")

@@ -58,7 +58,22 @@ cp .env.example .env
 DISCORD_BOT_TOKEN=你的-bot-token
 DISCORD_GUILD_ID=你的-server-id  # 可選
 OPENAI_API_KEY=你的-openai-api-key
+VISION_MODEL=gpt-4.1-mini  # 可選，見下方模型設定
 ```
+
+### AI 模型設定
+
+你可以透過 `VISION_MODEL` 環境變數自訂用於圖片分析的 AI 模型：
+
+| 模型 | 說明 | 預估成本/次 |
+|------|------|------------|
+| `gpt-4.1-nano` | 最便宜，速度快，適合簡單分析 | ~$0.001 |
+| `gpt-4.1-mini` | 平衡性價比（**預設**） | ~$0.005 |
+| `gpt-4.1` | 最強分析能力，成本較高 | ~$0.03 |
+| `gpt-4o-mini` | GPT-4o 系列，平衡選項 | ~$0.005 |
+| `gpt-4o` | GPT-4o 系列，強力分析 | ~$0.02 |
+
+如不設定，預設使用 `gpt-4.1-mini`。
 
 ### 4. 安裝與啟動
 
@@ -119,7 +134,7 @@ make run         # 只啟動 Bot
 | Interface | Discord Bot (discord.py) |
 | Backend | Python 3.12 + SQLAlchemy (async) |
 | Database | PostgreSQL 16 |
-| AI | OpenAI API (GPT-4.1-mini) |
+| AI | OpenAI API (可自訂模型) |
 
 ## 授權
 

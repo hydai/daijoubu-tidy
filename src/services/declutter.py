@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import String, and_, func, select
@@ -121,7 +121,7 @@ class DeclutterTaskService:
 
     async def get_recent_completed(self, days: int = 7) -> int:
         """Get count of tasks completed in recent days."""
-        since = datetime.now(timezone.utc) - timedelta(days=days)
+        since = datetime.now(UTC) - timedelta(days=days)
         result = await self.db.execute(
             select(func.count(DeclutterTask.id)).where(
                 and_(
@@ -134,7 +134,7 @@ class DeclutterTaskService:
 
     async def get_recent_created(self, days: int = 7) -> int:
         """Get count of tasks created in recent days."""
-        since = datetime.now(timezone.utc) - timedelta(days=days)
+        since = datetime.now(UTC) - timedelta(days=days)
         result = await self.db.execute(
             select(func.count(DeclutterTask.id)).where(
                 DeclutterTask.created_at >= since
@@ -159,13 +159,13 @@ class DeclutterTaskService:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def get_decision_stats(
-        self, since: datetime | None = None
-    ) -> dict[str, int]:
+    async def get_decision_stats(self, since: datetime | None = None) -> dict[str, int]:
         """Get statistics by decision type for completed tasks."""
-        query = select(
-            DeclutterTask.decision, func.count(DeclutterTask.id)
-        ).where(DeclutterTask.status == "done").group_by(DeclutterTask.decision)
+        query = (
+            select(DeclutterTask.decision, func.count(DeclutterTask.id))
+            .where(DeclutterTask.status == "done")
+            .group_by(DeclutterTask.decision)
+        )
 
         if since:
             query = query.where(DeclutterTask.updated_at >= since)

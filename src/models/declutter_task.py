@@ -15,10 +15,14 @@ class DeclutterTask(Base, UUIDMixin, TimestampMixin):
 
     # AI 分析結果
     analysis: Mapped[str] = mapped_column(Text, nullable=False)
-    decision: Mapped[str] = mapped_column(String(20), nullable=False)  # keep, consider, discard
+    decision: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # keep, consider, discard
 
     # 任務狀態
-    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending, done, dismissed
+    status: Mapped[str] = mapped_column(
+        String(20), default="pending"
+    )  # pending, done, dismissed
 
     # 實際處理結果
     action_taken: Mapped[str | None] = mapped_column(Text, nullable=True)
