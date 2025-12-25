@@ -54,7 +54,7 @@ class DeclutterCog(commands.Cog):
         item_name = parse_item_name_from_analysis(analysis)
 
         # 儲存到資料庫
-        async for db in get_db():
+        async with get_db() as db:
             service = DeclutterTaskService(db)
             task = await service.create_task(
                 item_name=item_name,
@@ -64,7 +64,6 @@ class DeclutterCog(commands.Cog):
                 source_channel=interaction.channel.name if interaction.channel else None,
                 source_message_id=str(interaction.id),
             )
-            await db.commit()
             task_id = str(task.id)[:8]
 
         # 決定顏色
@@ -109,7 +108,7 @@ class DeclutterCog(commands.Cog):
         """列出斷捨離任務"""
         await interaction.response.defer()
 
-        async for db in get_db():
+        async with get_db() as db:
             service = DeclutterTaskService(db)
 
             filter_status = None if status == "all" else status
@@ -171,7 +170,7 @@ class DeclutterCog(commands.Cog):
         """查看任務詳細內容"""
         await interaction.response.defer()
 
-        async for db in get_db():
+        async with get_db() as db:
             service = DeclutterTaskService(db)
             task = await service.get_task_by_prefix(task_id)
 
@@ -253,15 +252,13 @@ class DeclutterCog(commands.Cog):
         note: str | None = None,
     ) -> None:
         """標記任務為已完成"""
-        async for db in get_db():
+        async with get_db() as db:
             service = DeclutterTaskService(db)
             task = await service.update_task_status(
                 task_id,
                 status="done",
                 action_taken=note,
             )
-            if task:
-                await db.commit()
 
         if not task:
             await interaction.response.send_message(
@@ -287,15 +284,13 @@ class DeclutterCog(commands.Cog):
         reason: str | None = None,
     ) -> None:
         """略過任務"""
-        async for db in get_db():
+        async with get_db() as db:
             service = DeclutterTaskService(db)
             task = await service.update_task_status(
                 task_id,
                 status="dismissed",
                 action_taken=reason,
             )
-            if task:
-                await db.commit()
 
         if not task:
             await interaction.response.send_message(
@@ -317,11 +312,9 @@ class DeclutterCog(commands.Cog):
         task_id: str,
     ) -> None:
         """刪除任務"""
-        async for db in get_db():
+        async with get_db() as db:
             service = DeclutterTaskService(db)
             deleted = await service.delete_task(task_id)
-            if deleted:
-                await db.commit()
 
         if not deleted:
             await interaction.response.send_message(
