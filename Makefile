@@ -1,10 +1,12 @@
-.PHONY: help install dev-install run test lint format db-up db-down db-migrate db-upgrade clean
+.PHONY: help install dev-install start stop run test lint format db-up db-down db-migrate db-upgrade clean
 
 help:
 	@echo "Available commands:"
+	@echo "  start        - 啟動 Bot（含資料庫）"
+	@echo "  stop         - 停止 Bot 和資料庫"
+	@echo "  run          - 只啟動 Bot（不含資料庫）"
 	@echo "  install      - Install production dependencies"
 	@echo "  dev-install  - Install development dependencies"
-	@echo "  run          - Run the Discord bot"
 	@echo "  test         - Run tests"
 	@echo "  lint         - Run linter"
 	@echo "  format       - Format code"
@@ -13,6 +15,12 @@ help:
 	@echo "  db-migrate   - Create a new migration"
 	@echo "  db-upgrade   - Apply migrations"
 	@echo "  clean        - Clean up cache files"
+
+start:
+	@./scripts/start.sh
+
+stop:
+	@./scripts/stop.sh
 
 install:
 	pip install -e .
