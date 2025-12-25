@@ -13,37 +13,37 @@ logger = logging.getLogger(__name__)
 
 
 class SummaryCog(commands.Cog):
-    """Commands for summaries and statistics."""
+    """摘要與統計的指令"""
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="summary", description="Get a summary of your items")
-    @app_commands.describe(period="Time period for summary")
+    @app_commands.command(name="summary", description="產生資訊摘要報告")
+    @app_commands.describe(period="摘要的時間範圍")
     @app_commands.choices(
         period=[
-            app_commands.Choice(name="Today", value="daily"),
-            app_commands.Choice(name="This Week", value="weekly"),
-            app_commands.Choice(name="This Month", value="monthly"),
+            app_commands.Choice(name="今天", value="daily"),
+            app_commands.Choice(name="本週", value="weekly"),
+            app_commands.Choice(name="本月", value="monthly"),
         ]
     )
     async def summary(
         self, interaction: discord.Interaction, period: str = "daily"
     ) -> None:
-        """Generate a summary of saved items for a time period."""
+        """產生指定時間範圍的資訊摘要"""
         await interaction.response.defer(ephemeral=True)
 
-        # Calculate date range
+        # 計算時間範圍
         now = datetime.now(timezone.utc)
         if period == "daily":
             start_date = now - timedelta(days=1)
-            period_name = "Today"
+            period_name = "今天"
         elif period == "weekly":
             start_date = now - timedelta(weeks=1)
-            period_name = "This Week"
+            period_name = "本週"
         else:
             start_date = now - timedelta(days=30)
-            period_name = "This Month"
+            period_name = "本月"
 
         async with get_db() as db:
             item_service = ItemService(db)
@@ -51,27 +51,27 @@ class SummaryCog(commands.Cog):
 
             if not items:
                 await interaction.followup.send(
-                    f"No items saved in {period_name.lower()}.", ephemeral=True
+                    f"📭 {period_name}沒有儲存任何項目", ephemeral=True
                 )
                 return
 
-            # Generate AI summary
+            # 產生 AI 摘要
             ai_service = AIService()
             summary_text = await ai_service.generate_summary(items)
 
         embed = discord.Embed(
-            title=f"Summary - {period_name}",
+            title=f"📊 {period_name}的摘要",
             description=summary_text,
             color=discord.Color.blurple(),
             timestamp=now,
         )
-        embed.add_field(name="Items Count", value=str(len(items)), inline=True)
+        embed.add_field(name="項目數量", value=str(len(items)), inline=True)
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @app_commands.command(name="stats", description="View usage statistics")
+    @app_commands.command(name="stats", description="查看使用統計")
     async def stats(self, interaction: discord.Interaction) -> None:
-        """Show usage statistics."""
+        """顯示使用統計資訊"""
         await interaction.response.defer(ephemeral=True)
 
         async with get_db() as db:
@@ -79,29 +79,30 @@ class SummaryCog(commands.Cog):
             stats = await service.get_stats()
 
         embed = discord.Embed(
-            title="Statistics",
-            description="Your information collection stats",
+            title="📈 使用統計",
+            description="你的資訊收集統計數據",
             color=discord.Color.dark_blue(),
         )
-        embed.add_field(name="Total Items", value=str(stats["total_items"]), inline=True)
-        embed.add_field(name="Categories", value=str(stats["total_categories"]), inline=True)
-        embed.add_field(name="Tags", value=str(stats["total_tags"]), inline=True)
+        embed.add_field(name="總項目數", value=str(stats["total_items"]), inline=True)
+        embed.add_field(name="分類數", value=str(stats["total_categories"]), inline=True)
+        embed.add_field(name="標籤數", value=str(stats["total_tags"]), inline=True)
 
         if stats["items_by_type"]:
+            type_names = {"text": "文字", "url": "網址", "image": "圖片"}
             type_breakdown = "\n".join(
-                [f"- {t}: {c}" for t, c in stats["items_by_type"].items()]
+                [f"• {type_names.get(t, t)}：{c} 筆" for t, c in stats["items_by_type"].items()]
             )
-            embed.add_field(name="By Type", value=type_breakdown, inline=False)
+            embed.add_field(name="依類型統計", value=type_breakdown, inline=False)
 
         if stats["recent_items"]:
             embed.add_field(
-                name="Items (Last 7 days)", value=str(stats["recent_items"]), inline=True
+                name="近 7 天新增", value=f"{stats['recent_items']} 筆", inline=True
             )
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @app_commands.command(name="export", description="Export your data")
-    @app_commands.describe(format="Export format")
+    @app_commands.command(name="export", description="匯出所有資料")
+    @app_commands.describe(format="匯出格式")
     @app_commands.choices(
         format=[
             app_commands.Choice(name="JSON", value="json"),
@@ -111,7 +112,7 @@ class SummaryCog(commands.Cog):
     async def export(
         self, interaction: discord.Interaction, format: str = "json"
     ) -> None:
-        """Export all saved data."""
+        """匯出所有已儲存的資料"""
         await interaction.response.defer(ephemeral=True)
 
         async with get_db() as db:
@@ -119,10 +120,10 @@ class SummaryCog(commands.Cog):
             data = await service.export_data(format=format)
 
         if not data:
-            await interaction.followup.send("No data to export.", ephemeral=True)
+            await interaction.followup.send("📭 沒有資料可匯出", ephemeral=True)
             return
 
-        # Create file
+        # 建立檔案
         filename = f"daijoubu_export.{format}"
         file = discord.File(
             fp=data,
@@ -130,7 +131,7 @@ class SummaryCog(commands.Cog):
         )
 
         await interaction.followup.send(
-            content=f"Here's your data export in {format.upper()} format:",
+            content=f"📦 這是你的 {format.upper()} 格式匯出檔案：",
             file=file,
             ephemeral=True,
         )

@@ -128,3 +128,69 @@ Keep the summary under 300 words.""",
         except Exception as e:
             logger.error(f"Error generating summary: {e}")
             return f"Error generating summary: {e}"
+
+    async def analyze_image_for_declutter(self, image_url: str) -> dict:
+        """Analyze an image and provide decluttering advice."""
+        if not settings.openai_api_key:
+            return {
+                "error": "需要 OpenAI API Key 才能分析圖片",
+            }
+
+        try:
+            response = await self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """你是一位專業的斷捨離顧問，專門幫助人們整理物品、簡化生活。
+
+分析用戶上傳的物品照片，並根據以下原則提供建議：
+
+## 斷捨離三原則
+1. **斷** - 斷絕不需要的東西進入生活
+2. **捨** - 捨棄堆放在家裡沒用的東西
+3. **離** - 脫離對物品的執著
+
+## 評估標準
+- 實用性：這個物品有實際用途嗎？
+- 使用頻率：最近一年內用過嗎？
+- 情感價值：有重要的紀念意義嗎？
+- 替代性：可以用其他東西替代嗎？
+- 狀態：物品的狀況如何？
+
+## 回應格式（請用繁體中文）
+請提供以下資訊：
+1. 物品識別：這是什麼物品
+2. 建議決定：🟢 保留 / 🟡 考慮 / 🔴 捨棄
+3. 理由：為什麼這樣建議（2-3 句話）
+4. 行動建議：具體該怎麼處理
+5. 替代方案：如果捨棄，有什麼替代選擇""",
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "請分析這張照片中的物品，給我斷捨離的建議。",
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": image_url},
+                            },
+                        ],
+                    },
+                ],
+                max_tokens=800,
+                temperature=0.7,
+            )
+
+            return {
+                "success": True,
+                "analysis": response.choices[0].message.content.strip(),
+            }
+
+        except Exception as e:
+            logger.error(f"Error analyzing image: {e}")
+            return {
+                "error": f"分析圖片時發生錯誤：{e}",
+            }

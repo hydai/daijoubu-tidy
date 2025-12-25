@@ -34,6 +34,7 @@ class DaijoubuBot(commands.Bot):
         await self.load_extension("src.bot.cogs.collect")
         await self.load_extension("src.bot.cogs.search")
         await self.load_extension("src.bot.cogs.summary")
+        await self.load_extension("src.bot.cogs.declutter")
 
         # Sync slash commands
         if settings.discord_guild_id:

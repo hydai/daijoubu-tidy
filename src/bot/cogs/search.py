@@ -11,20 +11,20 @@ logger = logging.getLogger(__name__)
 
 
 class SearchCog(commands.Cog):
-    """Commands for searching saved information."""
+    """搜尋資訊的指令"""
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="search", description="Semantic search for items")
+    @app_commands.command(name="search", description="語意搜尋（用自然語言描述你要找什麼）")
     @app_commands.describe(
-        query="What are you looking for?",
-        limit="Maximum number of results (default: 5)",
+        query="你想找什麼？",
+        limit="最多顯示幾筆結果（預設：5）",
     )
     async def search(
         self, interaction: discord.Interaction, query: str, limit: int = 5
     ) -> None:
-        """Search for items using semantic similarity."""
+        """使用語意相似度搜尋項目"""
         await interaction.response.defer(ephemeral=True)
 
         async with get_db() as db:
@@ -33,13 +33,13 @@ class SearchCog(commands.Cog):
 
         if not results:
             await interaction.followup.send(
-                f"No results found for: {query}", ephemeral=True
+                f"🔍 找不到與「{query}」相關的內容", ephemeral=True
             )
             return
 
         embed = discord.Embed(
-            title=f"Search Results: {query}",
-            description=f"Found {len(results)} item(s)",
+            title=f"🔍 搜尋結果：{query}",
+            description=f"找到 {len(results)} 筆相關資料",
             color=discord.Color.purple(),
         )
 
@@ -48,22 +48,22 @@ class SearchCog(commands.Cog):
                 item.content[:100] + "..." if len(item.content) > 100 else item.content
             )
             embed.add_field(
-                name=f"{str(item.id)[:8]} (similarity: {score:.2f})",
+                name=f"{str(item.id)[:8]}（相似度：{score:.0%}）",
                 value=content_preview,
                 inline=False,
             )
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @app_commands.command(name="find", description="Keyword search for items")
+    @app_commands.command(name="find", description="關鍵字搜尋")
     @app_commands.describe(
-        keyword="Keyword to search for",
-        limit="Maximum number of results (default: 10)",
+        keyword="要搜尋的關鍵字",
+        limit="最多顯示幾筆結果（預設：10）",
     )
     async def find(
         self, interaction: discord.Interaction, keyword: str, limit: int = 10
     ) -> None:
-        """Search for items using keyword matching."""
+        """使用關鍵字搜尋項目"""
         await interaction.response.defer(ephemeral=True)
 
         async with get_db() as db:
@@ -72,31 +72,33 @@ class SearchCog(commands.Cog):
 
         if not results:
             await interaction.followup.send(
-                f"No results found for: {keyword}", ephemeral=True
+                f"🔍 找不到包含「{keyword}」的內容", ephemeral=True
             )
             return
 
         embed = discord.Embed(
-            title=f"Keyword Results: {keyword}",
-            description=f"Found {len(results)} item(s)",
+            title=f"🔎 關鍵字搜尋：{keyword}",
+            description=f"找到 {len(results)} 筆資料",
             color=discord.Color.teal(),
         )
 
+        type_names = {"text": "文字", "url": "網址", "image": "圖片"}
         for item in results:
             content_preview = (
                 item.content[:100] + "..." if len(item.content) > 100 else item.content
             )
+            type_name = type_names.get(item.content_type, item.content_type)
             embed.add_field(
-                name=f"{str(item.id)[:8]} - {item.content_type}",
+                name=f"{str(item.id)[:8]} - {type_name}",
                 value=content_preview,
                 inline=False,
             )
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @app_commands.command(name="categories", description="List all categories")
+    @app_commands.command(name="categories", description="列出所有分類")
     async def categories(self, interaction: discord.Interaction) -> None:
-        """List all available categories."""
+        """列出所有分類"""
         await interaction.response.defer(ephemeral=True)
 
         async with get_db() as db:
@@ -104,25 +106,25 @@ class SearchCog(commands.Cog):
             categories = await service.list_categories()
 
         if not categories:
-            await interaction.followup.send("No categories found.", ephemeral=True)
+            await interaction.followup.send("📂 目前沒有任何分類", ephemeral=True)
             return
 
         embed = discord.Embed(
-            title="Categories",
-            description=f"Total: {len(categories)} categories",
+            title="📂 分類列表",
+            description=f"共 {len(categories)} 個分類",
             color=discord.Color.gold(),
         )
 
         category_list = "\n".join(
-            [f"- {cat.name} ({cat.description or 'No description'})" for cat in categories]
+            [f"• {cat.name}（{cat.description or '無說明'}）" for cat in categories]
         )
-        embed.add_field(name="Available Categories", value=category_list, inline=False)
+        embed.add_field(name="可用分類", value=category_list, inline=False)
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @app_commands.command(name="tags", description="List all tags")
+    @app_commands.command(name="tags", description="列出所有標籤")
     async def tags(self, interaction: discord.Interaction) -> None:
-        """List all available tags."""
+        """列出所有標籤"""
         await interaction.response.defer(ephemeral=True)
 
         async with get_db() as db:
@@ -130,17 +132,17 @@ class SearchCog(commands.Cog):
             tags = await service.list_tags()
 
         if not tags:
-            await interaction.followup.send("No tags found.", ephemeral=True)
+            await interaction.followup.send("🏷️ 目前沒有任何標籤", ephemeral=True)
             return
 
         embed = discord.Embed(
-            title="Tags",
-            description=f"Total: {len(tags)} tags",
+            title="🏷️ 標籤列表",
+            description=f"共 {len(tags)} 個標籤",
             color=discord.Color.orange(),
         )
 
         tag_list = ", ".join([tag.name for tag in tags])
-        embed.add_field(name="Available Tags", value=tag_list, inline=False)
+        embed.add_field(name="可用標籤", value=tag_list, inline=False)
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
